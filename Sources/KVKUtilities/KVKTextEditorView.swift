@@ -40,7 +40,7 @@ public struct KVKTextEditorView: View {
                 VStack {
                     HStack {
                         Text(placeholder)
-                            .foregroundColor(.gray)
+                            .foregroundStyle(.gray.opacity(0.5))
                         Spacer()
                     }
                     Spacer()
@@ -59,7 +59,8 @@ struct KVKTextEditorView_Previews: PreviewProvider {
     
     static var previews: some View {
         KVKTextEditorView(text: Binding(get: { text },
-                                     set: { text = $0 }))
+                                     set: { text = $0 }),
+                          isDisplayedBorderLine: true)
         .frame(maxWidth: .infinity, minHeight: 150, maxHeight: 200)
             .padding()
     }

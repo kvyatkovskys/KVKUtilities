@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct KVKScrollView<Content: View>: View {
+public struct KVKScrollView<Content: View>: View {
     private let axes: Axis.Set
     private let showsIndicators: Bool
     private let onScroll: ScrollAction

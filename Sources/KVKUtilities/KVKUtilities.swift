@@ -1,5 +1,5 @@
 //
-//  File.swift
+//  KVKUtilities.swift
 //
 //
 //  Created by Sergei Kviatkovskii on 9/25/22.
@@ -8,6 +8,72 @@
 import SwiftUI
 
 #if canImport(UIKit)
+
+struct SkeletonView: ViewModifier {
+    
+    var isVisible: Bool
+    
+    func body(content: Content) -> some View {
+        if isVisible {
+            content
+                .redacted(reason: [.placeholder]).disabled(true)
+        } else {
+            content
+        }
+    }
+    
+}
+
+public extension UIWindowScene {
+    static var focused: UIWindowScene? {
+        UIApplication.shared.connectedScenes
+            .first { $0.activationState == .foregroundActive && $0 is UIWindowScene } as? UIWindowScene
+    }
+}
+
+public extension UIApplication {
+    
+    var orientation: UIInterfaceOrientation {
+        UIWindowScene.focused?.interfaceOrientation ?? .unknown
+    }
+    
+    var activeWindows: [UIWindow]? {
+        connectedScenes
+            .first { $0.activationState == .foregroundActive && $0 is UIWindowScene }
+            .flatMap { $0 as? UIWindowScene }?.windows
+    }
+    
+    var activeWindow: UIWindow? {
+        connectedScenes
+            .first { $0.activationState == .foregroundActive && $0 is UIWindowScene }
+            .flatMap { $0 as? UIWindowScene }?.windows
+            .first(where: \.isKeyWindow)
+    }
+    
+    var allWindows: [UIWindow] {
+        connectedScenes
+            .first { $0 is UIWindowScene }
+            .flatMap { $0 as? UIWindowScene }?.windows ?? []
+    }
+    
+    var lastActiveWindow: UIWindow? {
+        connectedScenes
+            .first { $0 is UIWindowScene }
+            .flatMap { $0 as? UIWindowScene }?.windows
+            .first(where: \.isKeyWindow)
+    }
+    
+    var isUserEnabledAllWindows: Bool {
+        get {
+            (activeWindows ?? []).allSatisfy { $0.isUserInteractionEnabled == true }
+        }
+        set {
+            activeWindows?.forEach { $0.isUserInteractionEnabled = newValue }
+        }
+    }
+    
+}
+
 public extension NSObject {
     // https://stackoverflow.com/questions/75073023/how-to-trigger-swiftui-datepicker-programmatically
     func accessibilityDescendant(passing test: (Any) -> Bool) -> Any? {
@@ -288,17 +354,6 @@ public extension SwiftUI.View {
                                     text: text))
     }
     
-    func setSkeleton(_ visible: Bool) -> some SwiftUI.View {
-        let placeholder: RedactionReasons
-        if visible {
-            placeholder = .placeholder
-        } else {
-            placeholder = []
-        }
-        
-        return redacted(reason: placeholder).allowsHitTesting(!visible)
-    }
-    
     func withNoAnimation(action: (() -> Void)?) {
         UIView.setAnimationsEnabled(false)
         action?()
@@ -318,12 +373,11 @@ public struct EmptyViewWithText: SwiftUI.View {
     
     public var body: some SwiftUI.View {
         VStack {
-            // TODO: waiting for xcode 15 relesa version
-//            if #available(iOS 17.0, *) {
-//                ContentUnavailableView {
-//                    Label(text, systemImage: "doc.text.magnifyingglass")
-//                }
-//            } else {
+            if #available(iOS 17.0, *) {
+                ContentUnavailableView {
+                    Label(text, systemImage: "doc.text.magnifyingglass")
+                }
+            } else {
                 VStack {
                     Image(systemName: "doc.text.magnifyingglass")
                         .resizable()
@@ -336,7 +390,7 @@ public struct EmptyViewWithText: SwiftUI.View {
                         .bold()
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-//            }
+            }
         }
         .background(.regularMaterial)
         .edgesIgnoringSafeArea(.all)
